@@ -11,7 +11,7 @@ MPESA_CONSUMER_KEY    = "L5avjCX8DBHvXdLmq2pksRcki4sTfGhnvGF0nBZAI3tHh3kK"
 MPESA_CONSUMER_SECRET = "QhxDszdrlcbVEwZpAAHLhfyrbAYfSj1Oa4qIkmvlqEUCMyhPLtH6Woj43WDA0DYe"
 MPESA_SHORTCODE       = "174379"
 MPESA_PASSKEY         = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
-MPESA_CALLBACK_URL    = "https://employer-slip-deepness.ngrok-free.dev/api/mpesa/callback"
+MPESA_CALLBACK_URL = "https://maggy-bazaar-backend.onrender.com/api/mpesa/callback"
 
 TOKEN_URL    = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
 STK_PUSH_URL = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"

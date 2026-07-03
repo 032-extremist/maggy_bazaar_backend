@@ -366,6 +366,58 @@ def upload_profile_image(email):
         except Exception:
             pass
 
+
+
+
+@app.route("/api/admin/products/<int:id>", methods=["PUT"])
+def admin_update_product(id):
+    data = request.json or {}
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE products
+            SET brand = %s, name = %s, price = %s, description = %s,
+                image = %s, stock = %s, category = %s, subcategory = %s
+            WHERE id = %s
+        """, (
+            data.get("brand"),
+            data.get("name"),
+            data.get("price"),
+            data.get("description"),
+            data.get("image"),
+            data.get("stock"),
+            data.get("category"),
+            data.get("subcategory"),
+            id,
+        ))
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Product not found"}), 404
+        conn.commit()
+        return jsonify({"message": "Product updated"})
+    except Error as error:
+        return jsonify({"error": str(error)}), 500
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if conn is not None:
+            conn.close()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @app.route("/api/cart/<string:email>", methods=["GET"])
 def get_cart(email):
     user_id = get_user_id(email.strip().lower())

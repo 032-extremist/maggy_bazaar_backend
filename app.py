@@ -7,6 +7,8 @@ import psycopg2
 from psycopg2 import Error, errorcodes
 from psycopg2.extras import RealDictCursor
 import uuid
+import cloudinary
+import cloudinary.uploader
 
 BASE_DIR = Path(__file__).resolve().parent
 app = Flask(__name__)
@@ -365,32 +367,40 @@ def upload_profile_image(email):
             pass
 
 
-@app.route("/api/user/<string:email>/profile-image", methods=["GET"])
-def get_profile_image(email):
+@app.route("/api/user/<string:email>/profile-image", methods=["POST"])
+def upload_profile_image(email):
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
     user_id = get_user_id(email.strip().lower())
     if not user_id:
         return jsonify({"error": "User not found."}), 404
 
-    conn = None
-    cursor = None
     try:
-        conn = get_db_connection(dict_cursor=True)
+        result = cloudinary.uploader.upload(file)
+        image_url = result["secure_url"]
+
+        conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT image_path FROM user_profile_image WHERE user_id = %s", (user_id,))
-        row = cursor.fetchone()
-        if not row or not row.get('image_path'):
-            return jsonify({"imageUrl": None})
-        image_path = row['image_path']
-        image_url = f"{request.host_url.rstrip('/')}/{image_path.lstrip('/')}"
+        cursor.execute(
+            "INSERT INTO user_profile_image (user_id, image_path) VALUES (%s, %s) "
+            "ON CONFLICT (user_id) DO UPDATE SET image_path = EXCLUDED.image_path",
+            (user_id, image_url),
+        )
+        conn.commit()
         return jsonify({"imageUrl": image_url})
     except Error as error:
         return jsonify({"error": str(error)}), 500
     finally:
-        if cursor is not None:
+        try:
             cursor.close()
-        if conn is not None:
             conn.close()
-
+        except Exception:
+            pass
 
 @app.route("/api/cart/<string:email>", methods=["GET"])
 def get_cart(email):
@@ -793,10 +803,8 @@ def admin_upload_image():
         return jsonify({"error": "No selected file"}), 400
 
     try:
-        filename = secure_filename(f"{uuid.uuid4().hex}_{file.filename}")
-        save_path = UPLOADS_DIR / filename
-        file.save(str(save_path))
-        return jsonify({"imageUrl": f"/uploads/{filename}"})
+        result = cloudinary.uploader.upload(file)
+        return jsonify({"imageUrl": result["secure_url"]})
     except Exception as error:
         return jsonify({"error": str(error)}), 500
 

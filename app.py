@@ -329,42 +329,6 @@ def add_to_cart():
         conn.close()
 
 
-@app.route("/api/user/<string:email>/profile-image", methods=["POST"])
-def upload_profile_image(email):
-    if 'file' not in request.files:
-        return jsonify({"error": "No file part"}), 400
-
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
-
-    user_id = get_user_id(email.strip().lower())
-    if not user_id:
-        return jsonify({"error": "User not found."}), 404
-
-    try:
-        filename = secure_filename(f"{uuid.uuid4().hex}_{file.filename}")
-        save_path = UPLOADS_DIR / filename
-        file.save(str(save_path))
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO user_profile_image (user_id, image_path) VALUES (%s, %s) "
-            "ON CONFLICT (user_id) DO UPDATE SET image_path = EXCLUDED.image_path",
-            (user_id, f"uploads/{filename}"),
-        )
-        conn.commit()
-        image_url = f"{request.host_url.rstrip('/')}/uploads/{filename}"
-        return jsonify({"imageUrl": image_url})
-    except Error as error:
-        return jsonify({"error": str(error)}), 500
-    finally:
-        try:
-            cursor.close()
-            conn.close()
-        except Exception:
-            pass
 
 
 @app.route("/api/user/<string:email>/profile-image", methods=["POST"])

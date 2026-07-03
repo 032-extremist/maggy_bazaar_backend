@@ -3,10 +3,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from pathlib import Path
 import os
+import uuid
 import psycopg2
 from psycopg2 import Error, errorcodes
 from psycopg2.extras import RealDictCursor
-import uuid
 import cloudinary
 import cloudinary.uploader
 
